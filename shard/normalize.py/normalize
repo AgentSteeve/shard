@@ -1,0 +1,74 @@
+"""Normalize raw credential lines: parse, validate, hash, dedup."""
+
+import hashlib
+import re
+from typing import Optional
+
+from shard.config import DEDUP_ALGO, MAX_LINE_LEN, MIN_LINE_LEN
+
+# Common separators in dumps: email:pass, email;pass, email|pass, email\tpass
+SEPARATORS = (":", ";", "|", "\t", ",")
+
+# Very rough email regex — we want recall, not RFC compliance
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def hash_str(s: str) -> str:
+    """Stable hash for dedup."""
+    h = hashlib.new(DEDUP_ALGO)
+    h.update(s.encode("utf-8", errors="ignore"))
+    return h.hexdigest()
+
+
+def extract_email(line: str) -> Optional[str]:
+    """Try to pull an email out of a raw line. Returns None if not found."""
+    line = line.strip()
+    if not line or len(line) < MIN_LINE_LEN or len(line) > MAX_LINE_LEN:
+        return None
+
+    for sep in SEPARATORS:
+        if sep in line:
+            parts = line.split(sep, 1)
+            candidate = parts[0].strip().lower()
+            if EMAIL_RE.match(candidate):
+                return candidate
+
+    # Bare email on its own line
+    candidate = line.lower()
+    if EMAIL_RE.match(candidate):
+        return candidate
+
+    return None
+
+
+def split_pair(line: str) -> tuple[Optional[str], Optional[str]]:
+    """Split a raw line into (email, password). Password can be None."""
+    line = line.strip()
+    if not line or len(line) < MIN_LINE_LEN or len(line) > MAX_LINE_LEN:
+        return None, None
+
+    for sep in SEPARATORS:
+        if sep in line:
+            parts = line.split(sep, 1)
+            email = parts[0].strip().lower()
+            password = parts[1].strip() if len(parts) > 1 else None
+            if EMAIL_RE.match(email):
+                return email, (password if password else None)
+
+    candidate = line.lower()
+    if EMAIL_RE.match(candidate):
+        return candidate, None
+
+    return None, None
+
+
+def domain_of(email: str) -> str:
+    """Extract domain from an email."""
+    return email.rsplit("@", 1)[-1].lower() if "@" in email else ""
+
+
+def normalize(email: str) -> tuple[str, str, str]:
+    """Return (email, domain, email_hash)."""
+    email = email.strip().lower()
+    domain = domain_of(email)
+    return email, domain, hash_str(email)
