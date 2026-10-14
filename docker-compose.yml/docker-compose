@@ -1,0 +1,13 @@
+services:
+  shard:
+    build: .
+    container_name: shard
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./shard.db:/app/shard.db
+    environment:
+      - SHARD_DB=/app/shard.db
+      - SHARD_DATA=/app/data
+    restart: unless-stopped
