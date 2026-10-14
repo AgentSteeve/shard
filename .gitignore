@@ -1,0 +1,34 @@
+# data — jamais commit les dumps
+data/*
+!data/.gitkeep
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# sqlite
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+
+# env / secrets
+.env
+.env.*
+secrets/
+*.key
+
+# editor
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# logs
+*.log
+logs/
