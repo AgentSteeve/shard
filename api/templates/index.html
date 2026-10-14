@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ app_name }}</title>
+  <style>
+    :root { --bg: #0b0d10; --fg: #e6e8eb; --dim: #8b9096; --acc: #4f8cff; --card: #14181d; --line: #22282f; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--fg); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:14px; }
+    header { padding: 24px; border-bottom: 1px solid var(--line); }
+    .brand { font-size: 18px; font-weight: 600; letter-spacing: .5px; }
+    .brand span { color: var(--acc); }
+    .stats { color: var(--dim); font-size: 12px; margin-top: 6px; }
+    main { max-width: 1000px; margin: 0 auto; padding: 24px; }
+    form { display: flex; gap: 8px; margin-bottom: 24px; }
+    input[type=text] { flex: 1; background: var(--card); border: 1px solid var(--line); color: var(--fg); padding: 12px 14px; border-radius: 6px; font-family: inherit; font-size: 14px; }
+    input[type=text]:focus { outline: none; border-color: var(--acc); }
+    button { background: var(--acc); color: #000; border:0; padding: 12px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    button:hover { filter: brightness(1.1); }
+    .opts { display: flex; gap: 16px; color: var(--dim); font-size: 12px; margin-bottom: 16px; align-items: center; }
+    .opts label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); font-size: 13px; }
+    th { color: var(--dim); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+    td.pwd { color: #ffb86b; }
+    td.src { color: var(--dim); font-size: 12px; }
+    .empty { color: var(--dim); text-align: center; padding: 40px; }
+    .count { color: var(--dim); font-size: 12px; margin-bottom: 8px; }
+    a { color: var(--acc); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<header>
+  <div class="brand">shard<span>.</span>fun</div>
+  <div class="stats">{{ stats.emails }} emails · {{ stats.credentials }} credentials · {{ stats.sources }} sources</div>
+</header>
+<main>
+  <form method="get" action="/">
+    <input type="text" name="q" placeholder="email ou préfixe..." value="{{ q }}" autofocus>
+    <button type="submit">chercher</button>
+  </form>
+  <div class="opts">
+    <label><input type="checkbox" name="exact" value="1" {% if exact %}checked{% endif %}> match exact</label>
+    <span>limit: {{ limit }}</span>
+    {% if q %}<a href="/export?q={{ q }}&exact={{ exact }}">export CSV</a>{% endif %}
+  </div>
+  {% if q %}
+    <div class="count">{{ rows|length }} résultat(s)</div>
+  {% endif %}
+  {% if rows %}
+  <table>
+    <thead><tr><th>email</th><th>password</th><th>source</th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+      <tr>
+        <td>{{ r.email }}</td>
+        <td class="pwd">{{ r.password or "—" }}</td>
+        <td class="src">{{ r.source or "?" }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% elif q %}
+    <div class="empty">aucun résultat</div>
+  {% else %}
+    <div class="empty">tape un email pour commencer</div>
+  {% endif %}
+</main>
+</body>
+</html>
